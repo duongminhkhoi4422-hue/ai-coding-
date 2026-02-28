@@ -1,20 +1,23 @@
-FROM python:3.11
+FROM openjdk:17-jdk-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-
+# Install Python + C++ + Node
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
         g++ \
         nodejs \
-        openjdk-17-jdk \
         ca-certificates \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Set python alias
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . .
 
