@@ -4,23 +4,25 @@ import os
 import time
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
-API_KEY = os.getenv("QWEN_API_KEY")
-print("API KEY:", os.getenv("QWEN_API_KEY"))
-
 TIMEOUT = 60
 MAX_RETRIES = 3
 
-def call_llm(system_prompt, user_prompt, max_tokens=800, temperature=0.3, model="qwen/qwen-2.5-14b-instruct"):
 
-    if not API_KEY:
+def call_llm(system_prompt, user_prompt,
+             max_tokens=800,
+             temperature=0.3,
+             model="Qwen/Qwen2.5-72B-Instruct"):  # 🔥 đổi model cho chắc
+
+    api_key = os.getenv("QWEN_API_KEY")
+    print("API KEY:", api_key)
+
+    if not api_key:
         print("🔥 API key missing")
         return None
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://your-app.onrender.com",
-        "X-Title": "AI Competition Project"
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
     }
 
     payload = {
@@ -35,6 +37,7 @@ def call_llm(system_prompt, user_prompt, max_tokens=800, temperature=0.3, model=
 
     for attempt in range(MAX_RETRIES):
         try:
+            print(f"\n🚀 Attempt {attempt + 1}")
             response = requests.post(
                 API_URL,
                 headers=headers,
@@ -42,12 +45,14 @@ def call_llm(system_prompt, user_prompt, max_tokens=800, temperature=0.3, model=
                 timeout=TIMEOUT
             )
 
-            if response.status_code == 200:
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
+            print("STATUS CODE:", response.status_code)
+            print("RAW RESPONSE:", response.text)
 
-            else:
-                print("🔥 API ERROR:", response.text)
+            if response.status_code != 200:
+                return None
+
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
 
         except Exception as e:
             print("🔥 LLM Exception:", e)
@@ -57,16 +62,20 @@ def call_llm(system_prompt, user_prompt, max_tokens=800, temperature=0.3, model=
     return None
 
 
-def call_llm_json(system_prompt, user_prompt, max_tokens=800, temperature=0.3, model="qwen/qwen-2.5-14b-instruct"):
+def call_llm_json(system_prompt, user_prompt,
+                  max_tokens=800,
+                  temperature=0.3,
+                  model="Qwen/Qwen2.5-72B-Instruct"):
 
-    raw = call_llm(system_prompt, user_prompt, max_tokens, temperature, model)
+    raw = call_llm(system_prompt, user_prompt,
+                   max_tokens, temperature, model)
 
     if not raw:
         return None
 
     try:
         return json.loads(raw)
-    except:
+    except Exception:
         print("⚠️ JSON parse failed")
-        print(raw)
+        print("RAW CONTENT:", raw)
         return None
