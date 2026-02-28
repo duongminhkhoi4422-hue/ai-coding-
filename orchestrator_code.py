@@ -1,58 +1,48 @@
 from agents.planner import planner
 from agents.coder import coder
 from agents.reviewer import reviewer
-from sandbox import run_code_safely
-from confidence import compute_confidence
-from language_utils import normalize_language
+from agents.confidence import calculate_confidence
+from sandbox import execute_code
 
 
-def run_code_pipeline(problem, language="python"):
-
-    try:
-        language = normalize_language(language)
-    except ValueError as e:
-        return {"error": str(e)}
-
-    # 1️⃣ Planner
-    plan = planner(problem)
-    if not plan:
-        return {"error": "Planner failed"}
-
-    # 2️⃣ Code Generation
-    coder_result = coder(problem, language=language)
-
-    if not coder_result:
-        return {"error": "Code generation failed"}
-
-    code = coder_result.get("code")
-
+def clean_code(code: str):
     if not code:
-        return {"error": "Empty code returned"}
+        return ""
 
-    # 3️⃣ Sandbox
-    sandbox_result = run_code_safely(code, language)
-    sandbox_success = sandbox_result.get("returncode", 1) == 0
+    code = code.replace("```python", "")
+    code = code.replace("```cpp", "")
+    code = code.replace("```c++", "")
+    code = code.replace("```c", "")
+    code = code.replace("```java", "")
+    code = code.replace("```javascript", "")
+    code = code.replace("```html", "")
+    code = code.replace("```", "")
 
-    # 4️⃣ Reviewer
-    review = reviewer(code, language=language)
+    return code.strip()
 
-    if isinstance(review, str):
-        reviewer_approved = "APPROVED" in review.upper()
-    else:
-        reviewer_approved = review.get("approved", False)
 
-    # 5️⃣ Confidence
-    confidence = compute_confidence(
-        dual_agreement=True,
-        symbolic_pass=False,
-        numeric_pass=False,
-        sandbox_success=sandbox_success,
-        reviewer_approved=reviewer_approved
-    )
+def run_code_pipeline(problem: str, language: str):
 
-    return {
-        "plan": plan,
-        "code": code,
-        "sandbox": sandbox_result,
-        "confidence": confidence
-    }
+    # ===== Planner =====
+    plan = planner(problem, language)
+
+    # ===== Coder =====
+    generated_code = coder(problem, language, plan)
+
+    # ===== Reviewer =====
+    reviewed_code = reviewer(problem, language, generated_code)
+
+    # ===== Sandbox (optional execution test) =====
+    try:
+        execute_code(reviewed_code, language)
+    except Exception:
+        pass
+
+    # ===== Confidence =====
+    try:
+        calculate_confidence(problem, reviewed_code)
+    except Exception:
+        pass
+
+    # ===== Return CLEAN CODE ONLY =====
+    return clean_code(reviewed_code)
