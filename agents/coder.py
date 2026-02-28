@@ -18,17 +18,12 @@ def extract_json(raw):
         return None
 
 
-def coder(input_data, language="python"):
+def coder(problem: str, language: str, plan: str = None):
 
     try:
         language = normalize_language(language)
     except ValueError:
         return None
-
-    if isinstance(input_data, dict):
-        user_prompt = json.dumps(input_data, indent=2)
-    else:
-        user_prompt = str(input_data)
 
     system_prompt = f"""
 You are a professional software engineer.
@@ -47,6 +42,14 @@ Rules:
 }}
 """
 
+    user_prompt = f"""
+Problem:
+{problem}
+
+Plan:
+{plan}
+"""
+
     raw = call_llm(system_prompt, user_prompt, temperature=0.2)
 
     if not raw:
@@ -60,4 +63,4 @@ Rules:
         print("RAW OUTPUT:\n", raw)
         return None
 
-    return result
+    return result["code"]

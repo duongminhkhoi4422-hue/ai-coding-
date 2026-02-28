@@ -3,6 +3,7 @@ from agents.coder import coder
 from agents.reviewer import reviewer
 from confidence import compute_confidence
 from sandbox import execute_code
+from language_utils import normalize_language
 
 
 def clean_code(code: str):
@@ -23,16 +24,33 @@ def clean_code(code: str):
 
 def run_code_pipeline(problem: str, language: str):
 
+    try:
+        language = normalize_language(language)
+    except Exception:
+        return "Unsupported language"
+
     # ===== Planner =====
-    plan = planner(problem, language)
+    try:
+        plan = planner(problem)
+    except Exception:
+        plan = None
 
     # ===== Coder =====
-    generated_code = coder(problem, language, plan)
+    try:
+        generated_code = coder(problem, language, plan)
+    except Exception:
+        generated_code = None
+
+    if not generated_code:
+        return "Cannot generate code"
 
     # ===== Reviewer =====
-    reviewed_code = reviewer(problem, language, generated_code)
+    try:
+        reviewed_code = reviewer(generated_code, language)
+    except Exception:
+        reviewed_code = generated_code
 
-    # ===== Sandbox (optional execution test) =====
+    # ===== Sandbox =====
     try:
         execute_code(reviewed_code, language)
     except Exception:
@@ -44,5 +62,4 @@ def run_code_pipeline(problem: str, language: str):
     except Exception:
         pass
 
-    # ===== Return CLEAN CODE ONLY =====
     return clean_code(reviewed_code)
