@@ -1,30 +1,34 @@
-FROM openjdk:17-jdk-slim
+# Use Python as base (stable + lightweight)
+FROM python:3.11-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python, C++, Node
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3 \
-        python3-pip \
-        python3-venv \
+        openjdk-17-jdk \
         g++ \
         nodejs \
         npm \
-        ca-certificates \
         curl \
+        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Make python command available
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
+# Set working directory
 WORKDIR /app
 
+# Copy requirements first (cache optimization)
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Upgrade pip and install deps
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy full project
 COPY . .
 
+# Expose FastAPI port
 EXPOSE 7860
 
+# Run server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
