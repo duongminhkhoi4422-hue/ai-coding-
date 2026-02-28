@@ -114,3 +114,5 @@ def execute_code(code: str, language: str):
             "returncode": 1,
             "executed_code": code
         }
+# Backward compatibility
+run_code_safely = execute_code
