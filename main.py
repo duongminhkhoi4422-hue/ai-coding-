@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, FileResponse
 from pydantic import BaseModel
 from orchestrator_code import run_code_pipeline
 import os
@@ -39,14 +39,34 @@ def generate_code(request: CodeRequest):
 
 
 # =============================
-# Serve Web UI
+# Static Mount (Safe Version)
 # =============================
-app.mount("/static", StaticFiles(directory="static"), name="static")
+STATIC_DIR = "static"
+
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
+# =============================
+# Home Route
+# =============================
 @app.get("/", response_class=HTMLResponse)
 def serve_home():
-    if os.path.exists("static/index.html"):
-        with open("static/index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>AI Coding System Live 🚀</h1><p>Swagger at /docs</p>"
+    file_path = os.path.join(STATIC_DIR, "index.html")
+
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+
+    return """
+    <h1>AI Coding Multi-Agent System 🚀</h1>
+    <p>Backend running successfully.</p>
+    <p>Go to <a href="/docs">/docs</a> for API testing.</p>
+    """
+
+
+# =============================
+# Health Check (for Render)
+# =============================
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
