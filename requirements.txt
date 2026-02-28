@@ -1,0 +1,4 @@
+gradio>=5.0
+huggingface_hub
+requests
+sympy
