@@ -5,6 +5,7 @@ import time
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 API_KEY = os.getenv("QWEN_API_KEY")
+print("API KEY:", os.getenv("QWEN_API_KEY"))
 
 TIMEOUT = 60
 MAX_RETRIES = 3
