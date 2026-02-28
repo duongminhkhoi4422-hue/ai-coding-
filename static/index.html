@@ -34,16 +34,30 @@
 async function sendPrompt() {
     const prompt = document.getElementById("prompt").value;
     const language = document.getElementById("language").value;
+    const output = document.getElementById("output");
 
-    const response = await fetch("/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt, language: language })
-    });
+    output.innerText = "Generating...";
 
-    const data = await response.json();
-    document.getElementById("output").innerText =
-        JSON.stringify(data, null, 2);
+    try {
+        const response = await fetch("/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                problem: prompt,
+                language: language
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error("Server error: " + response.status);
+        }
+
+        const data = await response.json();
+        output.innerText = JSON.stringify(data, null, 2);
+
+    } catch (error) {
+        output.innerText = "Error: " + error.message;
+    }
 }
 </script>
 
