@@ -5,3 +5,5 @@ sympy
 fastapi
 uvicorn
 pydantic
+requests
+python-dotenv
