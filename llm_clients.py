@@ -11,7 +11,7 @@ MAX_RETRIES = 3
 def call_llm(system_prompt, user_prompt,
              max_tokens=800,
              temperature=0.3,
-             model="Qwen/Qwen2.5-72B-Instruct"):  # 🔥 đổi model cho chắc
+             model="qwen/qwen-2.5-14b-instruct"):  # 🔥 đổi model cho chắc
 
     api_key = os.getenv("QWEN_API_KEY")
     print("API KEY:", api_key)
