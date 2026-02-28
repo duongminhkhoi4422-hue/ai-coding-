@@ -11,7 +11,7 @@ MAX_RETRIES = 3
 def call_llm(system_prompt, user_prompt,
              max_tokens=800,
              temperature=0.3,
-             model="openai/gpt-oss-20b:free"):  # 🔥 đổi model cho chắc
+             model="arcee-ai/trinity-large-preview:free"):  # 🔥 đổi model cho chắc
 
     api_key = os.getenv("QWEN_API_KEY")
     print("API KEY:", api_key)
@@ -65,7 +65,7 @@ def call_llm(system_prompt, user_prompt,
 def call_llm_json(system_prompt, user_prompt,
                   max_tokens=800,
                   temperature=0.3,
-                  model="openai/gpt-oss-20b:free"):
+                  model="arcee-ai/trinity-large-preview:free"):
 
     raw = call_llm(system_prompt, user_prompt,
                    max_tokens, temperature, model)
