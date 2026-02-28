@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Coding System</title>
+    <style>
+        body { font-family: Arial; background: #111; color: white; padding: 40px; }
+        textarea { width: 100%; height: 120px; font-size: 16px; }
+        select, button { padding: 10px; margin-top: 10px; font-size: 16px; }
+        pre { background: #222; padding: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<h1>🚀 AI Coding Multi-Agent</h1>
+
+<label>Select Language:</label>
+<select id="language">
+    <option value="Python">Python</option>
+    <option value="JavaScript">JavaScript</option>
+    <option value="C++">C++</option>
+    <option value="Java">Java</option>
+</select>
+
+<br><br>
+
+<textarea id="prompt" placeholder="Enter your coding task..."></textarea>
+<br>
+<button onclick="sendPrompt()">Generate</button>
+
+<h2>Response:</h2>
+<pre id="output"></pre>
+
+<script>
+async function sendPrompt() {
+    const prompt = document.getElementById("prompt").value;
+    const language = document.getElementById("language").value;
+
+    const response = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt, language: language })
+    });
+
+    const data = await response.json();
+    document.getElementById("output").innerText =
+        JSON.stringify(data, null, 2);
+}
+</script>
+
+</body>
+</html>
