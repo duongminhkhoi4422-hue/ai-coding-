@@ -1,102 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AI Coding Multi-Agent System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #f1f5f9;
-            padding: 40px;
-        }
-
-        h1 {
-            color: #38bdf8;
-        }
-
-        textarea {
-            width: 100%;
-            height: 130px;
-            font-size: 16px;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            margin-top: 10px;
-        }
-
-        select, button {
-            padding: 10px 15px;
-            margin-top: 15px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: none;
-        }
-
-        button {
-            background: #38bdf8;
-            color: black;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: #0ea5e9;
-        }
-
-        pre {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            margin-top: 20px;
-            overflow-x: auto;
-        }
-
-        .section {
-            margin-top: 30px;
-        }
-
-        .label {
-            font-weight: bold;
-            color: #22d3ee;
-        }
-
-        .loading {
-            color: #facc15;
-        }
-
-        .error {
-            color: #f87171;
-        }
-    </style>
-</head>
-
-<body>
-
-<h1>🚀 AI Coding Multi-Agent System</h1>
-
-<div class="section">
-    <label class="label">Select Language:</label><br>
-    <select id="language">
-        <option value="Python">Python</option>
-        <option value="JavaScript">JavaScript</option>
-        <option value="C++">C++</option>
-        <option value="Java">Java</option>
-    </select>
-</div>
-
-<div class="section">
-    <label class="label">Enter Problem:</label>
-    <textarea id="prompt" placeholder="Describe the coding task..."></textarea>
-</div>
-
-<button onclick="sendPrompt()">Generate Code</button>
-
-<div class="section">
-    <div class="label">Result:</div>
-    <pre id="output">Waiting for input...</pre>
-</div>
-
 <script>
 async function sendPrompt() {
     const prompt = document.getElementById("prompt").value.trim();
@@ -123,23 +24,17 @@ async function sendPrompt() {
         });
 
         if (!response.ok) {
-            throw new Error("Server error: " + response.status);
+            const errText = await response.text();
+            throw new Error("Server error: " + response.status + " - " + errText);
         }
 
-        const data = await response.json();
+        // 🔥 QUAN TRỌNG: đọc text thay vì json
+        const result = await response.text();
 
-        // Hiển thị đẹp nếu backend trả JSON structured
-        if (typeof data === "object") {
-            output.textContent = JSON.stringify(data, null, 2);
-        } else {
-            output.textContent = data;
-        }
+        output.textContent = result;
 
     } catch (error) {
         output.innerHTML = "<span class='error'>Error: " + error.message + "</span>";
     }
 }
 </script>
-
-</body>
-</html> 
