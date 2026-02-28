@@ -65,7 +65,7 @@ def call_llm(system_prompt, user_prompt,
 def call_llm_json(system_prompt, user_prompt,
                   max_tokens=800,
                   temperature=0.3,
-                  model="Qwen/Qwen2.5-72B-Instruct"):
+                  model="qwen/qwen-2.5-14b-instruct"):
 
     raw = call_llm(system_prompt, user_prompt,
                    max_tokens, temperature, model)
