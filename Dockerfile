@@ -1,34 +1,42 @@
-# Use Python as base (stable + lightweight)
 FROM python:3.11-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Update base packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        openjdk-17-jdk \
+        build-essential \
+        gcc \
         g++ \
-        nodejs \
-        npm \
+        openjdk-17-jdk \
         curl \
         ca-certificates \
+        gnupg \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Install NodeJS (official repo way)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get update && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify installations (important for debugging)
+RUN python --version && \
+    gcc --version && \
+    g++ --version && \
+    javac -version && \
+    node --version
+
 WORKDIR /app
 
-# Copy requirements first (cache optimization)
+# Install Python dependencies
 COPY requirements.txt .
-
-# Upgrade pip and install deps
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy full project
+# Copy project
 COPY . .
 
-# Expose FastAPI port
 EXPOSE 7860
 
-# Run server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]

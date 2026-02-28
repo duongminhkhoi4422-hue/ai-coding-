@@ -1,7 +1,11 @@
 import subprocess
 import tempfile
 import os
+import shutil
 from language_utils import normalize_language
+
+
+TIMEOUT = 5
 
 
 def execute_code(code: str, language: str):
@@ -9,137 +13,144 @@ def execute_code(code: str, language: str):
     try:
         language = normalize_language(language)
     except ValueError as e:
-        return {
-            "stdout": "",
-            "stderr": str(e),
-            "returncode": 1,
-            "executed_code": code
-        }
+        return error_response(str(e), code)
 
     try:
+        with tempfile.TemporaryDirectory() as tmpdir:
 
-        # =========================
-        # PYTHON
-        # =========================
-        if language == "python":
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as f:
-                f.write(code.encode())
-                filename = f.name
-
-            result = subprocess.run(
-                ["python3", filename],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-
-        # =========================
-        # JAVASCRIPT
-        # =========================
-        elif language == "javascript":
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".js") as f:
-                f.write(code.encode())
-                filename = f.name
-
-            result = subprocess.run(
-                ["node", filename],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-
-        # =========================
-        # C++
-        # =========================
-        elif language == "c++":
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".cpp") as f:
-                f.write(code.encode())
-                source = f.name
-
-            binary = source.replace(".cpp", "")
-
-            compile_process = subprocess.run(
-                ["g++", source, "-O2", "-o", binary],
-                capture_output=True,
-                text=True
-            )
-
-            if compile_process.returncode != 0:
-                return {
-                    "stdout": "",
-                    "stderr": compile_process.stderr,
-                    "returncode": 1,
-                    "executed_code": code
-                }
-
-            result = subprocess.run(
-                [binary],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-
-        # =========================
-        # JAVA
-        # =========================
-        elif language == "java":
-            with tempfile.TemporaryDirectory() as tmpdir:
-                filepath = os.path.join(tmpdir, "Main.java")
-
+            # =========================
+            # PYTHON
+            # =========================
+            if language == "python":
+                filepath = os.path.join(tmpdir, "main.py")
                 with open(filepath, "w") as f:
                     f.write(code)
 
+                result = run_process(
+                    ["python3", filepath]
+                )
+
+            # =========================
+            # JAVASCRIPT
+            # =========================
+            elif language == "javascript":
+                filepath = os.path.join(tmpdir, "main.js")
+                with open(filepath, "w") as f:
+                    f.write(code)
+
+                result = run_process(
+                    ["node", filepath]
+                )
+
+            # =========================
+            # C
+            # =========================
+            elif language == "c":
+                source = os.path.join(tmpdir, "main.c")
+                binary = os.path.join(tmpdir, "main")
+
+                with open(source, "w") as f:
+                    f.write(code)
+
                 compile_process = subprocess.run(
-                    ["javac", filepath],
+                    ["gcc", source, "-O2", "-o", binary],
                     capture_output=True,
                     text=True
                 )
 
                 if compile_process.returncode != 0:
-                    return {
-                        "stdout": "",
-                        "stderr": compile_process.stderr,
-                        "returncode": 1,
-                        "executed_code": code
-                    }
+                    return error_response(compile_process.stderr, code)
 
-                result = subprocess.run(
-                    ["java", "-cp", tmpdir, "Main"],
+                result = run_process([binary])
+
+            # =========================
+            # C++
+            # =========================
+            elif language == "c++":
+                source = os.path.join(tmpdir, "main.cpp")
+                binary = os.path.join(tmpdir, "main")
+
+                with open(source, "w") as f:
+                    f.write(code)
+
+                compile_process = subprocess.run(
+                    ["g++", source, "-O2", "-o", binary],
                     capture_output=True,
-                    text=True,
-                    timeout=5
+                    text=True
                 )
 
-        else:
+                if compile_process.returncode != 0:
+                    return error_response(compile_process.stderr, code)
+
+                result = run_process([binary])
+
+            # =========================
+            # JAVA
+            # =========================
+            elif language == "java":
+                source = os.path.join(tmpdir, "Main.java")
+
+                with open(source, "w") as f:
+                    f.write(code)
+
+                compile_process = subprocess.run(
+                    ["javac", source],
+                    capture_output=True,
+                    text=True
+                )
+
+                if compile_process.returncode != 0:
+                    return error_response(compile_process.stderr, code)
+
+                result = run_process(
+                    ["java", "-cp", tmpdir, "Main"]
+                )
+
+            # =========================
+            # HTML
+            # =========================
+            elif language == "html":
+                # HTML không execute — chỉ trả về content
+                return {
+                    "stdout": code,
+                    "stderr": "",
+                    "returncode": 0,
+                    "executed_code": code
+                }
+
+            else:
+                return error_response(f"Unsupported language: {language}", code)
+
             return {
-                "stdout": "",
-                "stderr": f"Unsupported language: {language}",
-                "returncode": 1,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
                 "executed_code": code
             }
 
-        return {
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "returncode": result.returncode,
-            "executed_code": code
-        }
-
     except subprocess.TimeoutExpired:
-        return {
-            "stdout": "",
-            "stderr": "Execution timed out",
-            "returncode": 1,
-            "executed_code": code
-        }
+        return error_response("Execution timed out", code)
 
     except Exception as e:
-        return {
-            "stdout": "",
-            "stderr": str(e),
-            "returncode": 1,
-            "executed_code": code
-        }
+        return error_response(str(e), code)
+
+
+def run_process(command):
+    return subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        timeout=TIMEOUT
+    )
+
+
+def error_response(message, code):
+    return {
+        "stdout": "",
+        "stderr": message,
+        "returncode": 1,
+        "executed_code": code
+    }
 
 
 # Backward compatibility
