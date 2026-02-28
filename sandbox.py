@@ -1,11 +1,26 @@
 import subprocess
 import tempfile
 import os
+from language_utils import normalize_language
+
 
 def execute_code(code: str, language: str):
-    language = language.strip().lower()
 
     try:
+        language = normalize_language(language)
+    except ValueError as e:
+        return {
+            "stdout": "",
+            "stderr": str(e),
+            "returncode": 1,
+            "executed_code": code
+        }
+
+    try:
+
+        # =========================
+        # PYTHON
+        # =========================
         if language == "python":
             with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as f:
                 f.write(code.encode())
@@ -18,7 +33,10 @@ def execute_code(code: str, language: str):
                 timeout=5
             )
 
-        elif language in ["javascript", "js"]:
+        # =========================
+        # JAVASCRIPT
+        # =========================
+        elif language == "javascript":
             with tempfile.NamedTemporaryFile(delete=False, suffix=".js") as f:
                 f.write(code.encode())
                 filename = f.name
@@ -30,14 +48,18 @@ def execute_code(code: str, language: str):
                 timeout=5
             )
 
-        elif language in ["c++", "cpp"]:
+        # =========================
+        # C++
+        # =========================
+        elif language == "c++":
             with tempfile.NamedTemporaryFile(delete=False, suffix=".cpp") as f:
                 f.write(code.encode())
                 source = f.name
 
             binary = source.replace(".cpp", "")
+
             compile_process = subprocess.run(
-                ["g++", source, "-o", binary],
+                ["g++", source, "-O2", "-o", binary],
                 capture_output=True,
                 text=True
             )
@@ -57,9 +79,13 @@ def execute_code(code: str, language: str):
                 timeout=5
             )
 
+        # =========================
+        # JAVA
+        # =========================
         elif language == "java":
             with tempfile.TemporaryDirectory() as tmpdir:
                 filepath = os.path.join(tmpdir, "Main.java")
+
                 with open(filepath, "w") as f:
                     f.write(code)
 
@@ -114,5 +140,7 @@ def execute_code(code: str, language: str):
             "returncode": 1,
             "executed_code": code
         }
+
+
 # Backward compatibility
 run_code_safely = execute_code

@@ -1,10 +1,10 @@
 import json
 import re
 from llm_clients import call_llm
+from language_utils import normalize_language
 
 
 def extract_json(raw):
-
     if not raw:
         return None
 
@@ -12,15 +12,18 @@ def extract_json(raw):
     if not match:
         return None
 
-    json_str = match.group()
-
     try:
-        return json.loads(json_str)
+        return json.loads(match.group())
     except Exception:
         return None
 
 
 def coder(input_data, language="python"):
+
+    try:
+        language = normalize_language(language)
+    except ValueError:
+        return None
 
     if isinstance(input_data, dict):
         user_prompt = json.dumps(input_data, indent=2)
@@ -52,13 +55,8 @@ Rules:
 
     result = extract_json(raw)
 
-    if not result:
-        print("❌ JSON extraction failed")
-        print("RAW OUTPUT:\n", raw)
-        return None
-
-    if "code" not in result:
-        print("❌ No code key found")
+    if not result or "code" not in result:
+        print("❌ Invalid JSON from LLM")
         print("RAW OUTPUT:\n", raw)
         return None
 

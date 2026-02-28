@@ -1,13 +1,5 @@
 from llm_clients import call_llm
-
-
-SUPPORTED_LANGUAGES = [
-    "python",
-    "cpp",
-    "java",
-    "javascript",
-    "html"
-]
+from language_utils import normalize_language
 
 
 def reviewer(code: str, language: str = "python"):
@@ -15,13 +7,18 @@ def reviewer(code: str, language: str = "python"):
     if not code:
         return None
 
-    language = language.lower()
+    try:
+        language = normalize_language(language)
+    except ValueError as e:
+        return {
+            "approved": False,
+            "reason": str(e)
+        }
 
-    if language not in SUPPORTED_LANGUAGES:
-        raise ValueError(f"Unsupported language: {language}")
-
-    system_prompt = """
+    system_prompt = f"""
 You are a strict senior code reviewer.
+
+Language: {language}
 
 If the code is correct:
 Respond with:

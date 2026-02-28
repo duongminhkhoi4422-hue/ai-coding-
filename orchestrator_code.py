@@ -3,35 +3,37 @@ from agents.coder import coder
 from agents.reviewer import reviewer
 from sandbox import run_code_safely
 from confidence import compute_confidence
+from language_utils import normalize_language
 
 
 def run_code_pipeline(problem, language="python"):
+
+    try:
+        language = normalize_language(language)
+    except ValueError as e:
+        return {"error": str(e)}
 
     # 1️⃣ Planner
     plan = planner(problem)
     if not plan:
         return {"error": "Planner failed"}
 
-    # 2️⃣ Code generation
+    # 2️⃣ Code Generation
     coder_result = coder(problem, language=language)
 
     if not coder_result:
         return {"error": "Code generation failed"}
 
-    # 🔥 Handle both dict or string
-    if isinstance(coder_result, dict):
-        code = coder_result.get("code")
-    else:
-        code = coder_result
+    code = coder_result.get("code")
 
     if not code:
         return {"error": "Empty code returned"}
 
-    # 3️⃣ Sandbox execution
+    # 3️⃣ Sandbox
     sandbox_result = run_code_safely(code, language)
     sandbox_success = sandbox_result.get("returncode", 1) == 0
 
-    # 4️⃣ Review
+    # 4️⃣ Reviewer
     review = reviewer(code, language=language)
 
     if isinstance(review, str):
@@ -39,7 +41,7 @@ def run_code_pipeline(problem, language="python"):
     else:
         reviewer_approved = review.get("approved", False)
 
-    # 5️⃣ Confidence (REAL scoring)
+    # 5️⃣ Confidence
     confidence = compute_confidence(
         dual_agreement=True,
         symbolic_pass=False,
