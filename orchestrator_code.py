@@ -1,7 +1,7 @@
 from agents.planner import planner
 from agents.coder import coder
 from agents.reviewer import reviewer
-from confidence import calculate_confidence
+from confidence import compute_confidence
 from sandbox import execute_code
 
 
@@ -40,7 +40,7 @@ def run_code_pipeline(problem: str, language: str):
 
     # ===== Confidence =====
     try:
-        calculate_confidence(problem, reviewed_code)
+        compute_confidence(problem, reviewed_code)
     except Exception:
         pass
 
