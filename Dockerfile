@@ -1,7 +1,11 @@
 FROM python:3.11-slim
 
+# Install multi-language runtimes
 RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
+    nodejs \
+    npm \
+    openjdk-17-jdk-headless \
     ca-certificates \
     curl \
     && rm -rf /var/lib/apt/lists/*
