@@ -1,47 +1,121 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Coding System</title>
+    <title>AI Coding Multi-Agent System</title>
     <style>
-        body { font-family: Arial; background: #111; color: white; padding: 40px; }
-        textarea { width: 100%; height: 120px; font-size: 16px; }
-        select, button { padding: 10px; margin-top: 10px; font-size: 16px; }
-        pre { background: #222; padding: 20px; white-space: pre-wrap; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 10px;
+        }
+
+        select, button {
+            padding: 10px 15px;
+            margin-top: 15px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        button {
+            background: #38bdf8;
+            color: black;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #0ea5e9;
+        }
+
+        pre {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #22d3ee;
+        }
+
+        .loading {
+            color: #facc15;
+        }
+
+        .error {
+            color: #f87171;
+        }
     </style>
 </head>
+
 <body>
 
-<h1>🚀 AI Coding Multi-Agent</h1>
+<h1>🚀 AI Coding Multi-Agent System</h1>
 
-<label>Select Language:</label>
-<select id="language">
-    <option value="Python">Python</option>
-    <option value="JavaScript">JavaScript</option>
-    <option value="C++">C++</option>
-    <option value="Java">Java</option>
-</select>
+<div class="section">
+    <label class="label">Select Language:</label><br>
+    <select id="language">
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="C++">C++</option>
+        <option value="Java">Java</option>
+    </select>
+</div>
 
-<br><br>
+<div class="section">
+    <label class="label">Enter Problem:</label>
+    <textarea id="prompt" placeholder="Describe the coding task..."></textarea>
+</div>
 
-<textarea id="prompt" placeholder="Enter your coding task..."></textarea>
-<br>
-<button onclick="sendPrompt()">Generate</button>
+<button onclick="sendPrompt()">Generate Code</button>
 
-<h2>Response:</h2>
-<pre id="output"></pre>
+<div class="section">
+    <div class="label">Result:</div>
+    <pre id="output">Waiting for input...</pre>
+</div>
 
 <script>
 async function sendPrompt() {
-    const prompt = document.getElementById("prompt").value;
+    const prompt = document.getElementById("prompt").value.trim();
     const language = document.getElementById("language").value;
     const output = document.getElementById("output");
 
-    output.innerText = "Generating...";
+    if (!prompt) {
+        output.innerHTML = "<span class='error'>Please enter a problem description.</span>";
+        return;
+    }
+
+    output.innerHTML = "<span class='loading'>Generating... please wait...</span>";
 
     try {
         const response = await fetch("/generate", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 problem: prompt,
                 language: language
@@ -53,13 +127,19 @@ async function sendPrompt() {
         }
 
         const data = await response.json();
-        output.innerText = JSON.stringify(data, null, 2);
+
+        // Hiển thị đẹp nếu backend trả JSON structured
+        if (typeof data === "object") {
+            output.textContent = JSON.stringify(data, null, 2);
+        } else {
+            output.textContent = data;
+        }
 
     } catch (error) {
-        output.innerText = "Error: " + error.message;
+        output.innerHTML = "<span class='error'>Error: " + error.message + "</span>";
     }
 }
 </script>
 
 </body>
-</html>
+</html> 
